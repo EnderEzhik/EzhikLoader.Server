@@ -6,20 +6,14 @@ namespace EzhikLoader.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "admin")]
-    public class UsersController : ControllerBase
+    [Authorize]
+    public class SubscriptionsController : ControllerBase
     {
         private readonly MyDbContext _dbContext;
 
-        public UsersController(MyDbContext dbContext)
+        public SubscriptionsController(MyDbContext dbContext)
         {
             _dbContext = dbContext;
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> User()
-        {
-            return Ok();
         }
     }
 }
