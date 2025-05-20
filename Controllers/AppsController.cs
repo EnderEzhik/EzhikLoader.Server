@@ -74,8 +74,12 @@ namespace EzhikLoader.Server.Controllers
             }
 
             string filePath = Path.Combine(appsFilesDirectory, app.Id.ToString(), app.FileName);
-
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+
+            subscription.LastDownloadedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync();
+
             return File(fileStream, "application/octet-stream", app.FileName);
         }
     }

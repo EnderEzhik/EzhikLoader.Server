@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Data;
+using EzhikLoader.Server.Logger;
+using EzhikLoader.Server.Interfaces;
 
 namespace EzhikLoader.Server
 {
@@ -32,6 +34,9 @@ namespace EzhikLoader.Server
             });
             builder.Services.AddAuthorization();
             builder.Services.AddAutoMapper(typeof(Program).Assembly);
+            builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), "logs.txt"));
+            builder.Services.AddScoped<SubscriptionService>();
+            builder.Services.AddScoped<IPaymentService, FakePaymentService>();
 
             var app = builder.Build();
 
@@ -50,7 +55,6 @@ namespace EzhikLoader.Server
                 requestLogText.AppendLine($"Time: {DateTime.Now.ToLongTimeString()}");
                 requestLogText.AppendLine($"Host: {context.Request.Host}");
                 requestLogText.AppendLine($"Authorization: {context.Request.Headers.Authorization}");
-                requestLogText.AppendLine($"Method: {context.Request.Method}");
 
                 using (var s = new StreamReader(context.Request.Body))
                 {

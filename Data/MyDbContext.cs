@@ -9,6 +9,7 @@ namespace EzhikLoader.Server.Data
         public DbSet<App> Apps { get; set; } = null!;
         public DbSet<Subscription> Subscriptions { get; set; } = null!;
         public DbSet<Role> Roles { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         public MyDbContext(DbContextOptions<MyDbContext> contextOptions) : base(contextOptions)
         {
@@ -75,7 +76,7 @@ namespace EzhikLoader.Server.Data
                 entity.Property(e => e.FileName).HasMaxLength(32).IsRequired();
                 entity.HasIndex(e => e.FileName).IsUnique();
 
-                entity.Property(e => e.IconName).HasMaxLength(32).IsRequired();
+                entity.Property(e => e.IconName).HasMaxLength(32);
                 entity.HasIndex(e => e.IconName).IsUnique();
             });
 
@@ -95,6 +96,16 @@ namespace EzhikLoader.Server.Data
                 entity.Property(e => e.LastDownloadedAt).HasColumnType("TIMESTAMP");
             });
 
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+                entity.HasIndex(e => e.PaymentId).IsUnique();
+
+                entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMP").HasDefaultValueSql("CURRENT_TIMESTAMP()");
+            });
+
             modelBuilder.Entity<Role>().HasData(
                 new Role() { Id = 1, Name = "admin" },
                 new Role() { Id = 2, Name = "user" }
@@ -102,6 +113,10 @@ namespace EzhikLoader.Server.Data
 
             modelBuilder.Entity<User>().HasData(
                 new User() { Id = 1, Login = "test", Password = "test", RoleId = 1, IsActive = true}
+            );
+
+            modelBuilder.Entity<App>().HasData(
+                new App() { Id = 1, Name = "testApp1", Description = "Description for testApp1", Price = 199, IsActive = true, FileName = "testApp1"}
             );
 
             base.OnModelCreating(modelBuilder);

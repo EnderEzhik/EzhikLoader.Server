@@ -12,5 +12,6 @@
         public DateTime RegistrationDate { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+        public virtual ICollection<Payment> Payments { get; set; }
     }
 }

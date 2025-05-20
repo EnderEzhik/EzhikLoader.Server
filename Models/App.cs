@@ -10,7 +10,8 @@
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
         public string FileName { get; set; }
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
         public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+        public virtual ICollection<Payment> Payments { get; set; }
     }
 }
