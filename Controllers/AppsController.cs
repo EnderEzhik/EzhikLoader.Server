@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
-using EzhikLoader.Server.Data;
+using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Models.DTOs.Response;
 
 namespace EzhikLoader.Server.Controllers
@@ -12,25 +12,19 @@ namespace EzhikLoader.Server.Controllers
     [Authorize]
     public class AppsController : ControllerBase
     {
-        private readonly MyDbContext _dbContext;
         private readonly IMapper _mapper;
-        private readonly string appsFilesDirectory = Path.Combine(Directory.GetCurrentDirectory(), "AppsFiles");
+        private readonly AppService _appService;
 
-        public AppsController(MyDbContext dbContext, IMapper mapper)
+        public AppsController(IMapper mapper, AppService appService)
         {
-            _dbContext = dbContext;
             _mapper = mapper;
-
-            if (!Directory.Exists(appsFilesDirectory))
-            {
-                Directory.CreateDirectory(appsFilesDirectory);
-            }
+            _appService = appService;
         }
 
         [HttpGet]
         public async Task<IActionResult> AllApps()
         {
-            var apps = await _dbContext.Apps.Where(a => a.IsActive == true).ToListAsync();
+            var apps = await _appService.GetAllApps();
 
             return Ok(_mapper.Map<List<AppDTO>>(apps));
         }
@@ -42,9 +36,7 @@ namespace EzhikLoader.Server.Controllers
 
             var userId = int.Parse(userIdClaim);
 
-            var availableApps = await _dbContext.Subscriptions
-                .Where(s => s.UserId == userId && s.EndDate > DateTime.UtcNow)
-                .Select(s => s.App).ToListAsync();
+            var availableApps = await _appService.GetAvailableApps(userId);
 
             return Ok(_mapper.Map<List<AppDTO>>(availableApps));
         }
@@ -52,35 +44,23 @@ namespace EzhikLoader.Server.Controllers
         [HttpGet("{appId}/file")]
         public async Task<IActionResult> FileApp(int appId)
         {
-            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
-
-            if (app == null)
-            {
-                return BadRequest($"App with ID {appId} not found");
-            }
-
-            var userIdClaim = HttpContext.User.FindFirst("sub")!.Value;
-
+            string userIdClaim = HttpContext.User.FindFirstValue("sub");
             var userId = int.Parse(userIdClaim);
 
-            var subscription = await _dbContext.Subscriptions
-                .FirstOrDefaultAsync(s => s.UserId == userId 
-                && s.Id == appId 
-                && s.EndDate > DateTime.UtcNow);
+            try
+            {
+                var (fileStream, fileName) = await _appService.GetFileApp(appId, userId);
 
-            if (subscription == null)
+                return File(fileStream, "application/octet-stream", fileName);
+            }
+            catch (FileNotFoundException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }
-
-            string filePath = Path.Combine(appsFilesDirectory, app.Id.ToString(), app.FileName);
-            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-
-            subscription.LastDownloadedAt = DateTime.UtcNow;
-
-            await _dbContext.SaveChangesAsync();
-
-            return File(fileStream, "application/octet-stream", app.FileName);
         }
     }
 }

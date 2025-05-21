@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Services;
-using EzhikLoader.Server.Models;
 using EzhikLoader.Server.Models.DTOs.Request;
 
 namespace EzhikLoader.Server.Controllers
@@ -12,62 +9,47 @@ namespace EzhikLoader.Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IJwtService _jwtService;
-        private readonly MyDbContext _dbContext;
-        public AuthController(IJwtService jwtService, MyDbContext dbContext)
+        private readonly AuthService _authService;
+        public AuthController(IJwtService jwtService, AuthService authService)
         {
             _jwtService = jwtService;
-            _dbContext = dbContext;
+            _authService = authService;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDTO loginUser)
         {
-            if(string.IsNullOrEmpty(loginUser.login) || string.IsNullOrEmpty(loginUser.password))
+            try
             {
-                return BadRequest();
-            }
+                var user = await _authService.Login(loginUser.login, loginUser.password);
 
-            var user = await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(user => user.Login == loginUser.login && user.Password == loginUser.password);
-            
-            if (user == null)
+                string token = _jwtService.GenerateToken(user);
+                return Ok(new { token = token });
+            }
+            catch (ArgumentNullException ex)
             {
-                return Unauthorized();
+                return BadRequest(ex.Message);
             }
-
-            string token = _jwtService.GenerateToken(user);
-            return Ok(new { token = token });
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterUserDTO userDTO)
         {
-            var existUser = await _dbContext.Users.FirstOrDefaultAsync(e => e.Login == userDTO.Login);
-            if (existUser !=  null)
+            try
             {
-                return BadRequest($"User with login \"{userDTO.Login}\" already exist");
+                var newUser = await _authService.Register(userDTO.Login, userDTO.Password, userDTO.Email);
+
+                string token = _jwtService.GenerateToken(newUser);
+                return Ok(new { token = token });
             }
-
-            User newUser = new User();
-            newUser.Login = userDTO.Login;
-            newUser.Password = userDTO.Password;
-            newUser.Role = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "user");
-
-            if (userDTO.Email != null)
+            catch (ArgumentException ex)
             {
-                var existEmail = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == userDTO.Email);
-                if (existEmail != null)
-                {
-                    return BadRequest($"Email \"{userDTO.Email}\" is already in use");
-                }
-
-                newUser.Email = userDTO.Email;
+                return BadRequest(ex.Message);
             }
-            
-            _dbContext.Users.Add(newUser);
-            await _dbContext.SaveChangesAsync();
-
-            string token = _jwtService.GenerateToken(newUser);
-            return Ok(new { token = token });
         }
     }
 }

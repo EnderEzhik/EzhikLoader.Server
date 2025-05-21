@@ -60,21 +60,5 @@ namespace EzhikLoader.Server.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
-
-        //public async void SetPaymentSuccess(string paymentId, string status)
-        //{
-        //    var payment = await _dbContext.Payments.FirstOrDefaultAsync(p => p.PaymentId == paymentId);
-        //    if (payment != null)
-        //    {
-        //        payment.Status = status;
-
-        //        await _dbContext.SaveChangesAsync();
-
-        //        if (payment.Status == "success")
-        //        {
-        //            await _subscriptionService.ActivateAsync(paymentId);
-        //        }
-        //    }
-        //}
     }
 }

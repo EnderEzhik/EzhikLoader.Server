@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using EzhikLoader.Server.Data;
 
 namespace EzhikLoader.Server.Controllers
 {
@@ -9,12 +8,7 @@ namespace EzhikLoader.Server.Controllers
     [Authorize(Roles = "admin")]
     public class UsersController : ControllerBase
     {
-        private readonly MyDbContext _dbContext;
-
-        public UsersController(MyDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        public UsersController() { }
 
         [HttpGet]
         public async Task<IActionResult> User()
