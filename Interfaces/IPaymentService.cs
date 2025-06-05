@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using EzhikLoader.Server.Models.DTOs.Response;
-using EzhikLoader.Server.Models.DTOs.Request;
+﻿using EzhikLoader.Server.Models.DTOs.User.Request;
+using EzhikLoader.Server.Models.DTOs.User.Response;
 
 namespace EzhikLoader.Server.Interfaces
 {

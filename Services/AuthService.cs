@@ -13,7 +13,7 @@ namespace EzhikLoader.Server.Services
             _dbContext = dbContext;
         }
 
-        public async Task<User> Login(string login, string password)
+        public async Task<User> LoginAsync(string login, string password)
         {
             if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
             {
@@ -28,15 +28,18 @@ namespace EzhikLoader.Server.Services
                 throw new UnauthorizedAccessException("login or password incorrect");
             }
 
+            user.LastLoginDate = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+
             return user;
         }
 
-        public async Task<User> Register(string login, string password, string? email = null)
+        public async Task<User> RegisterAsync(string login, string password, string? email = null)
         {
             var existUser = await _dbContext.Users.FirstOrDefaultAsync(e => e.Login == login);
             if (existUser != null)
             {
-                throw new ArgumentException($"User with login \"{login}\" already exist");
+                throw new ArgumentException($"user with login \"{login}\" already exist");
             }
 
             User newUser = new User();
@@ -49,7 +52,7 @@ namespace EzhikLoader.Server.Services
                 var existEmail = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
                 if (existEmail != null)
                 {
-                    throw new ArgumentException($"Email \"{email}\" is already in use");
+                    throw new ArgumentException($"email \"{email}\" is already in use");
                 }
 
                 newUser.Email = email;

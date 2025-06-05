@@ -1,4 +1,4 @@
-﻿namespace EzhikLoader.Server.Models.DTOs.Response
+﻿namespace EzhikLoader.Server.Models.DTOs.User.Response
 {
     public class AppDTO
     {

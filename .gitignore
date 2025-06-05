@@ -400,5 +400,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-AppsFiles/
+Storage/
+AdminPanel/
 *.txt

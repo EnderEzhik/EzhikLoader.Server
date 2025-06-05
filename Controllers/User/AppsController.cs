@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using AutoMapper;
 using EzhikLoader.Server.Services;
-using EzhikLoader.Server.Models.DTOs.Response;
+using EzhikLoader.Server.Models.DTOs.User.Response;
 
-namespace EzhikLoader.Server.Controllers
+namespace EzhikLoader.Server.Controllers.User
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/apps")]
     [Authorize]
     public class AppsController : ControllerBase
     {
@@ -22,44 +22,48 @@ namespace EzhikLoader.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AllApps()
+        public async Task<IActionResult> GetAllAppsAsync()
         {
-            var apps = await _appService.GetAllApps();
+            var apps = await _appService.GetAllAppsAsync();
 
             return Ok(_mapper.Map<List<AppDTO>>(apps));
         }
 
         [HttpGet("available")]
-        public async Task<IActionResult> AvailableApp()
+        public async Task<IActionResult> GetAvailableAppsAsync()
         {
             var userIdClaim = HttpContext.User.FindFirst("sub")!.Value;
 
             var userId = int.Parse(userIdClaim);
 
-            var availableApps = await _appService.GetAvailableApps(userId);
+            var availableApps = await _appService.GetAvailableAppsAsync(userId);
 
             return Ok(_mapper.Map<List<AppDTO>>(availableApps));
         }
 
         [HttpGet("{appId}/file")]
-        public async Task<IActionResult> FileApp(int appId)
+        public async Task<IActionResult> GetFileAppAsync(int appId)
         {
             string userIdClaim = HttpContext.User.FindFirstValue("sub");
             var userId = int.Parse(userIdClaim);
 
             try
             {
-                var (fileStream, fileName) = await _appService.GetFileApp(appId, userId);
+                var (fileStream, fileName) = await _appService.GetFileAppAsync(appId, userId);
 
                 return File(fileStream, "application/octet-stream", fileName);
             }
-            catch (FileNotFoundException ex)
+            catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
             catch (UnauthorizedAccessException)
             {
                 return Forbid();
+            }
+            catch (FileNotFoundException)
+            {
+                return Problem($"file for app with ID {appId} not found");
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EzhikLoader.Server.Services;
-using EzhikLoader.Server.Models.DTOs.Request;
+using EzhikLoader.Server.Models.DTOs.User.Request;
 
 namespace EzhikLoader.Server.Controllers
 {
@@ -10,6 +10,7 @@ namespace EzhikLoader.Server.Controllers
     {
         private readonly IJwtService _jwtService;
         private readonly AuthService _authService;
+
         public AuthController(IJwtService jwtService, AuthService authService)
         {
             _jwtService = jwtService;
@@ -21,10 +22,10 @@ namespace EzhikLoader.Server.Controllers
         {
             try
             {
-                var user = await _authService.Login(loginUser.login, loginUser.password);
+                var user = await _authService.LoginAsync(loginUser.login, loginUser.password);
 
                 string token = _jwtService.GenerateToken(user);
-                return Ok(new { token = token });
+                return Ok(new { token });
             }
             catch (ArgumentNullException ex)
             {
@@ -41,10 +42,10 @@ namespace EzhikLoader.Server.Controllers
         {
             try
             {
-                var newUser = await _authService.Register(userDTO.Login, userDTO.Password, userDTO.Email);
+                var newUser = await _authService.RegisterAsync(userDTO.Login, userDTO.Password, userDTO.Email);
 
                 string token = _jwtService.GenerateToken(newUser);
-                return Ok(new { token = token });
+                return Ok(new { token });
             }
             catch (ArgumentException ex)
             {

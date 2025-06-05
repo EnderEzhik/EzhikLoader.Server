@@ -4,8 +4,9 @@
     {
         public int Id { get; set; }
         public string PaymentId { get; set; }
+        public bool IsManual { get; set; }
         public string Status { get; set; }
-        public decimal Amount { get; set; }
+        public double Amount { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public int UserId { get; set; }

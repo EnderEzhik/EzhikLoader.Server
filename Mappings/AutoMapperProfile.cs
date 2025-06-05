@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using EzhikLoader.Server.Models;
-using EzhikLoader.Server.Models.DTOs.Response;
+using EzhikLoader.Server.Models.DTOs.Admin.Request;
+using EzhikLoader.Server.Models.DTOs.Admin.Response;
+using EzhikLoader.Server.Models.DTOs.User.Response;
 
 namespace EzhikLoader.Server.Mappings
 {
@@ -8,10 +10,14 @@ namespace EzhikLoader.Server.Mappings
     {
         public AutoMapperProfile()
         {
-            CreateMap<User, UserDTO>();
-            CreateMap<UserDTO, User>();
+            CreateMap<User, UserDTO>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.Name));
 
-            CreateMap<App, Models.DTOs.Response.AppDTO>();
+            CreateMap<App, AppDTO>();
+
+            CreateMap<App, UpdateAppDataDTO>();
+
+            CreateMap<Subscription, Models.DTOs.Admin.Response.SubscriptionDTO>();
         }
     }
 }

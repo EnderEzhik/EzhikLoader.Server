@@ -1,17 +1,14 @@
-﻿namespace EzhikLoader.Server.Models
+﻿namespace EzhikLoader.Server.Models.DTOs.Admin.Response
 {
-    public class User
+    public class UserDTO
     {
         public int Id { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
         public string? Email { get; set; }
-        public int RoleId { get; set; }
-        public Role Role { get; set; }
+        public string Role { get; set; }
         public bool IsActive { get; set; }
         public DateTime RegistrationDate { get; set; }
         public DateTime? LastLoginDate { get; set; }
-        public virtual ICollection<Subscription> Subscriptions { get; set; }
-        public virtual ICollection<Payment> Payments { get; set; }
     }
 }

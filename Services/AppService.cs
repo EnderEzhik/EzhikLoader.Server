@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models;
+using EzhikLoader.Server.Models.DTOs.Admin.Request;
 
 namespace EzhikLoader.Server.Services
 {
@@ -15,47 +16,129 @@ namespace EzhikLoader.Server.Services
             _appsFilesDirectory = config["AppsFilesDirectory"]!;
         }
 
-        public async Task<List<App>> GetAllApps()
+        public async Task<List<App>> GetAllAppsAsync()
         {
             var apps = await _dbContext.Apps.Where(a => a.IsActive == true).ToListAsync();
             return apps;
         }
 
-        public async Task<List<App>> GetAvailableApps(int userId)
+        public async Task<List<App>> GetAvailableAppsAsync(int userId)
         {
             var apps = await _dbContext.Subscriptions.Where(s => s.UserId == userId && s.EndDate > DateTime.UtcNow)
                 .Select(s => s.App).ToListAsync();
             return apps;
         }
 
-        public async Task<(FileStream FileStream, string FileName)> GetFileApp(int appId, int userId)
+        public async Task<(FileStream FileStream, string FileName)> GetFileAppAsync(int appId, int userId)
+        {
+            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
+            if (app == null)
+            {
+                throw new ArgumentException($"app with ID {appId} not found");
+            }
+
+            if (await _dbContext.Users.AnyAsync(u => u.Id == userId))
+            {
+                throw new ArgumentException($"user with ID {userId} not found");
+            }
+
+            var subscription = await _dbContext.Subscriptions
+                .FirstOrDefaultAsync(s => s.UserId == userId
+                                       && s.AppId == appId
+                                       && s.EndDate > DateTime.UtcNow);
+
+            if (subscription == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            string filePath = Path.Combine(_appsFilesDirectory, app.Id.ToString(), app.FileName);
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+
+            subscription.LastDownloadedAt = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+
+            return (fileStream, app.FileName);
+        }
+
+        public async Task<App> CreateAppAsync(CreateAppDTO newAppDTO)
+        {
+            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Name == newAppDTO.Name);
+            if (app != null)
+            {
+                throw new ArgumentException($"app with Name \"{newAppDTO.Name}\" already exist");
+            }
+
+            App newApp = new App()
+            {
+                Name = newAppDTO.Name,
+                Description = newAppDTO.Description,
+                Version = newAppDTO.Version,
+                Price = newAppDTO.Price!.Value,
+                IsActive = newAppDTO.IsActive!.Value,
+                FileName = newAppDTO.FileName,
+                IconName = newAppDTO.IconName
+            };
+
+            _dbContext.Apps.Add(newApp);
+            await _dbContext.SaveChangesAsync();
+
+            return newApp;
+        }
+
+        public async Task<App> DeleteAppAsync(int appId)
         {
             var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
 
             if (app == null)
             {
-                throw new FileNotFoundException($"App with ID {appId} not found");
-                //return (null, null, $"App with ID {appId} not found");
+                throw new ArgumentException($"app with ID {appId} not found");
             }
 
-            var subscription = await _dbContext.Subscriptions
-                .FirstOrDefaultAsync(s => s.UserId == userId 
-                                       && s.AppId == appId 
-                                       && s.EndDate > DateTime.UtcNow);
-
-            if (subscription == null)
-            {
-                throw new UnauthorizedAccessException("Forbidden: No active subscription");
-                //return (null, null, "Forbidden: No active subscription");
-            }
-
-            subscription.LastDownloadedAt = DateTime.UtcNow;
+            _dbContext.Apps.Remove(app);
             await _dbContext.SaveChangesAsync();
 
-            string filePath = Path.Combine(_appsFilesDirectory, app.Id.ToString(), app.FileName);
-            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return app;
+        }
 
-            return (fileStream, app.FileName);
+        public async Task UpdateAppAsync(UpdateAppDataDTO updateApp)
+        {
+            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == updateApp.Id);
+            if (app == null)
+            {
+                throw new ArgumentException($"app with ID {updateApp.Id} not found");
+            }
+
+            if (updateApp.Name != null)
+            {
+                app.Name = updateApp.Name;
+            }
+            if (updateApp.Description != null)
+            {
+                app.Description = updateApp.Description;
+            }
+            if (updateApp.Version != null)
+            {
+                app.Version = updateApp.Version;
+            }
+            if (updateApp.Price.HasValue)
+            {
+                app.Price = updateApp.Price.Value;
+            }
+            if (updateApp.IsActive.HasValue)
+            {
+                app.IsActive = updateApp.IsActive.Value;
+            }
+            if (updateApp.FileName != null)
+            {
+                app.FileName = updateApp.FileName;
+            }
+            if (updateApp.IconName != null)
+            {
+                app.IconName = updateApp.IconName;
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

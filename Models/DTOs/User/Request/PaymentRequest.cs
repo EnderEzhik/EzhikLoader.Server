@@ -1,9 +1,8 @@
-﻿namespace EzhikLoader.Server.Models.DTOs.Request
+﻿namespace EzhikLoader.Server.Models.DTOs.User.Request
 {
     public class PaymentRequest
     {
         public int UserId { get; set; }
         public int AppId { get; set; }
-        public decimal Amount { get; set; }
     }
 }

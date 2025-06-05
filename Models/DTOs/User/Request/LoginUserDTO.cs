@@ -1,4 +1,4 @@
-﻿namespace EzhikLoader.Server.Models.DTOs.Request
+﻿namespace EzhikLoader.Server.Models.DTOs.User.Request
 {
     public class LoginUserDTO
     {
