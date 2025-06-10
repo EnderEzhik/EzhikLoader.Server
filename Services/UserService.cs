@@ -31,7 +31,7 @@ namespace EzhikLoader.Server.Services
             return _mapper.Map<List<UserDTO>>(users);
         }
 
-        public async Task<UserDTO> GetUserByIDAsync(int userId)
+        public async Task<Models.DTOs.User.Response.UserDTO> GetUserByIDAsync(int userId)
         {
             var user = await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
 
@@ -40,7 +40,7 @@ namespace EzhikLoader.Server.Services
                 throw new ArgumentException($"user with ID {userId} not found");
             }
 
-            return _mapper.Map<UserDTO>(user);
+            return _mapper.Map<Models.DTOs.User.Response.UserDTO>(user);
         }
 
         public async Task UpdateUserAsync(UpdateUserDTO updateUser)

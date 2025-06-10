@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EzhikLoader.Server.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/subscriptions")]
+    [Authorize(Roles = "admin")]
     public class SubscriptionsController : ControllerBase
     {
         private readonly SubscriptionService _subscriptionService;

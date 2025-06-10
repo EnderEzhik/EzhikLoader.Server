@@ -2,31 +2,34 @@
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
+using AutoMapper;
 
 namespace EzhikLoader.Server.Services
 {
     public class AppService
     {
         private readonly MyDbContext _dbContext;
+        private readonly IMapper _mapper;
         private readonly string _appsFilesDirectory;
 
-        public AppService(MyDbContext dbContext, IConfiguration config)
+        public AppService(MyDbContext dbContext, IMapper mapper, IConfiguration config)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
             _appsFilesDirectory = config["AppsFilesDirectory"]!;
         }
 
-        public async Task<List<App>> GetAllAppsAsync()
+        public async Task<List<Models.DTOs.User.Response.AppDTO>> GetAllAppsAsync()
         {
             var apps = await _dbContext.Apps.Where(a => a.IsActive == true).ToListAsync();
-            return apps;
+            return _mapper.Map<List<Models.DTOs.User.Response.AppDTO>>(apps);
         }
 
-        public async Task<List<App>> GetAvailableAppsAsync(int userId)
+        public async Task<List<Models.DTOs.User.Response.AppDTO>> GetAvailableAppsAsync(int userId)
         {
             var apps = await _dbContext.Subscriptions.Where(s => s.UserId == userId && s.EndDate > DateTime.UtcNow)
                 .Select(s => s.App).ToListAsync();
-            return apps;
+            return _mapper.Map<List<Models.DTOs.User.Response.AppDTO>>(apps);
         }
 
         public async Task<(FileStream FileStream, string FileName)> GetFileAppAsync(int appId, int userId)
@@ -37,7 +40,7 @@ namespace EzhikLoader.Server.Services
                 throw new ArgumentException($"app with ID {appId} not found");
             }
 
-            if (await _dbContext.Users.AnyAsync(u => u.Id == userId))
+            if (!await _dbContext.Users.AnyAsync(u => u.Id == userId))
             {
                 throw new ArgumentException($"user with ID {userId} not found");
             }
@@ -61,7 +64,7 @@ namespace EzhikLoader.Server.Services
             return (fileStream, app.FileName);
         }
 
-        public async Task<App> CreateAppAsync(CreateAppDTO newAppDTO)
+        public async Task<Models.DTOs.User.Response.AppDTO> CreateAppAsync(CreateAppDTO newAppDTO)
         {
             var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Name == newAppDTO.Name);
             if (app != null)
@@ -83,10 +86,10 @@ namespace EzhikLoader.Server.Services
             _dbContext.Apps.Add(newApp);
             await _dbContext.SaveChangesAsync();
 
-            return newApp;
+            return _mapper.Map<Models.DTOs.User.Response.AppDTO>(newApp);
         }
 
-        public async Task<App> DeleteAppAsync(int appId)
+        public async Task<Models.DTOs.User.Response.AppDTO> DeleteAppAsync(int appId)
         {
             var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
 
@@ -98,7 +101,7 @@ namespace EzhikLoader.Server.Services
             _dbContext.Apps.Remove(app);
             await _dbContext.SaveChangesAsync();
 
-            return app;
+            return _mapper.Map<Models.DTOs.User.Response.AppDTO>(app);
         }
 
         public async Task UpdateAppAsync(UpdateAppDataDTO updateApp)

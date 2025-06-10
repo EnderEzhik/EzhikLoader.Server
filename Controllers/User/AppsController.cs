@@ -12,12 +12,10 @@ namespace EzhikLoader.Server.Controllers.User
     [Authorize]
     public class AppsController : ControllerBase
     {
-        private readonly IMapper _mapper;
         private readonly AppService _appService;
 
-        public AppsController(IMapper mapper, AppService appService)
+        public AppsController(AppService appService)
         {
-            _mapper = mapper;
             _appService = appService;
         }
 
@@ -26,7 +24,7 @@ namespace EzhikLoader.Server.Controllers.User
         {
             var apps = await _appService.GetAllAppsAsync();
 
-            return Ok(_mapper.Map<List<AppDTO>>(apps));
+            return Ok(apps);
         }
 
         [HttpGet("available")]
@@ -38,7 +36,7 @@ namespace EzhikLoader.Server.Controllers.User
 
             var availableApps = await _appService.GetAvailableAppsAsync(userId);
 
-            return Ok(_mapper.Map<List<AppDTO>>(availableApps));
+            return Ok(availableApps);
         }
 
         [HttpGet("{appId}/file")]
