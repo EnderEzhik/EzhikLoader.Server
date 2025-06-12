@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
-using AutoMapper;
 
 namespace EzhikLoader.Server.Services
 {

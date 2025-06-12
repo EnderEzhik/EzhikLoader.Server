@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Models.DTOs.User.Request;
+using System.Security.Claims;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Controllers
 {
@@ -27,7 +29,7 @@ namespace EzhikLoader.Server.Controllers
                 string token = _jwtService.GenerateToken(user);
                 return Ok(new { token });
             }
-            catch (ArgumentNullException ex)
+            catch (BadRequestException ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -47,7 +49,49 @@ namespace EzhikLoader.Server.Controllers
                 string token = _jwtService.GenerateToken(newUser);
                 return Ok(new { token });
             }
-            catch (ArgumentException ex)
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("change_password")]
+        public async Task<IActionResult> ChangePassword(Models.DTOs.User.Request.UpdateUserDTO userDTO)
+        {
+            var userIdClaim = HttpContext.User.FindFirstValue("sub");
+            int userId = int.Parse(userIdClaim);
+
+            try
+            {
+                await _authService.ChangePasswordAsync(userId, userDTO.Password);
+                return Ok();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("link_email")]
+        public async Task<IActionResult> LinkEmail(Models.DTOs.User.Request.UpdateUserDTO userDTO)
+        {
+            var userIdClaim = HttpContext.User.FindFirstValue("sub");
+            int userId = int.Parse(userIdClaim);
+
+            try
+            {
+                await _authService.LinkEmailAsync(userId, userDTO.Email);
+                return Ok();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
             {
                 return BadRequest(ex.Message);
             }

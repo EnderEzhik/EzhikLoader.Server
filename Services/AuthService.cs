@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Services
 {
@@ -17,7 +18,7 @@ namespace EzhikLoader.Server.Services
         {
             if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
             {
-                throw new ArgumentNullException("login and password are required");
+                throw new BadRequestException("login and password are required");
             }
 
             var user = await _dbContext.Users.Include(u => u.Role)
@@ -39,7 +40,7 @@ namespace EzhikLoader.Server.Services
             var existUser = await _dbContext.Users.FirstOrDefaultAsync(e => e.Login == login);
             if (existUser != null)
             {
-                throw new ArgumentException($"user with login \"{login}\" already exist");
+                throw new BadRequestException($"user with login \"{login}\" already exist");
             }
 
             User newUser = new User();
@@ -52,7 +53,7 @@ namespace EzhikLoader.Server.Services
                 var existEmail = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
                 if (existEmail != null)
                 {
-                    throw new ArgumentException($"email \"{email}\" is already in use");
+                    throw new BadRequestException($"email \"{email}\" is already in use");
                 }
 
                 newUser.Email = email;
@@ -62,6 +63,46 @@ namespace EzhikLoader.Server.Services
             await _dbContext.SaveChangesAsync();
 
             return newUser;
+        }
+
+        public async Task ChangePasswordAsync(int userId, string newPassword)
+        {
+            var user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException($"user with ID {userId} not found");
+            }
+
+            if (user.Password == newPassword)
+            {
+                throw new BadRequestException("the new password must be different from the old one");
+            }
+
+            user.Password = newPassword;
+            await _dbContext.SaveChangesAsync();
+        }
+
+        internal async Task LinkEmailAsync(int userId, string email)
+        {
+            var emailExist = await _dbContext.Users.AnyAsync(u => u.Email == email);
+            if(emailExist)
+            {
+                throw new BadRequestException($"email \"{email}\" is already in use");
+            }
+
+            var user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException($"user with ID {userId} not found");
+            }
+
+            if (user.Email == email)
+            {
+                throw new BadRequestException("the new email must be different from the old one");
+            }
+
+            user.Email = email;
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

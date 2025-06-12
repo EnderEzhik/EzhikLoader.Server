@@ -14,12 +14,6 @@ namespace EzhikLoader.Server.Data
 
         public MyDbContext(DbContextOptions<MyDbContext> contextOptions) : base(contextOptions) { }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseMySql("server=localhost;user=root;password=1234;database=ezhik_loader;", 
-                new MySqlServerVersion(new Version(8, 4, 5)));
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MyDbContext).Assembly);

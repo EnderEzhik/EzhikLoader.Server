@@ -1,9 +1,10 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using EzhikLoader.Server.Logger;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Interfaces;
+using EzhikLoader.Server.Logger;
 using EzhikLoader.Server.Services;
 
 namespace EzhikLoader.Server
@@ -14,9 +15,12 @@ namespace EzhikLoader.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
-            builder.Services.AddDbContext<MyDbContext>();
-            builder.Services.AddScoped<IJwtService, JwtService>();
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            builder.Services.AddDbContext<MyDbContext>(options =>
+            {
+                options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 5)));
+            });
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -25,7 +29,7 @@ namespace EzhikLoader.Server
                     ValidateAudience = false,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found."))),
                     NameClaimType = "sub",
                     RoleClaimType = "role"
                 };
@@ -34,11 +38,13 @@ namespace EzhikLoader.Server
             });
             builder.Services.AddAuthorization();
             builder.Services.AddAutoMapper(typeof(Program).Assembly);
+            builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<AppService>();
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<SubscriptionService>();
             builder.Services.AddScoped<IPaymentService, FakePaymentService>();
+            builder.Services.AddControllers();
             builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), "logs.txt"));
 
             var app = builder.Build();
