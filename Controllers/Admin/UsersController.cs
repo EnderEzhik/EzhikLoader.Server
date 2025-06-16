@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Authorization;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Controllers.Admin
 {
     [ApiController]
-    [Route("api/admin/users")]
+    [Route("api/users")]
     [Authorize(Roles = "admin")]
     public class UsersController : ControllerBase
     {
@@ -18,21 +19,24 @@ namespace EzhikLoader.Server.Controllers.Admin
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegisterUserAsync(CreateUserDTO createUser)
+        public async Task<IActionResult> RegisterUser(CreateUserDTO createUser)
         {
             try
             {
                 var user = await _userService.CreateUserAsync(createUser);
-                return Ok(user);
+                return CreatedAtAction(
+                    nameof(Controllers.Admin.UsersController.GetUserById),
+                    new { userId=user.Id },
+                    user);
             }
-            catch (ArgumentException ex)
+            catch (BadRequestException ex)
             {
                 return BadRequest(ex.Message);
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllUsersAsync()
+        public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userService.GetAllUsersAsync();
 
@@ -40,16 +44,16 @@ namespace EzhikLoader.Server.Controllers.Admin
         }
 
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUserByIDAsync(int userId)
+        public async Task<IActionResult> GetUserById(int userId)
         {
             try
             {
-                var user = await _userService.GetUserByIDAsync(userId);
+                var user = await _userService.GetDetailedUserByIdAsync(userId);
                 return Ok(user);
             }
-            catch (ArgumentException ex)
+            catch (NotFoundException ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(ex.Message);
             }
         }
 
@@ -59,11 +63,11 @@ namespace EzhikLoader.Server.Controllers.Admin
             try
             {
                 await _userService.UpdateUserAsync(updateUser);
-                return Ok();
+                return NoContent();
             }
-            catch (ArgumentException ex)
+            catch (NotFoundException ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(ex.Message);
             }
         }
 
@@ -72,10 +76,10 @@ namespace EzhikLoader.Server.Controllers.Admin
         {
             try
             {
-                var user = await _userService.DeleteUserByIDAsync(userId);
+                var user = await _userService.DeleteUserByIdAsync(userId);
                 return Ok(user);
             }
-            catch (ArgumentException ex)
+            catch (NotFoundException ex)
             {
                 return BadRequest(ex.Message);
             }

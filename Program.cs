@@ -15,7 +15,7 @@ namespace EzhikLoader.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("Connection string 'DefaultConnection' not found");
             builder.Services.AddDbContext<MyDbContext>(options =>
             {
                 options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 5)));

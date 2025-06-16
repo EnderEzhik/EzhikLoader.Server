@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
 using EzhikLoader.Server.Services;
 
 namespace EzhikLoader.Server.Controllers.User
@@ -12,12 +11,10 @@ namespace EzhikLoader.Server.Controllers.User
     public class UsersController : ControllerBase
     {
         private readonly UserService _userService;
-        private readonly IMapper _mapper;
 
-        public UsersController(UserService userService, IMapper mapper)
+        public UsersController(UserService userService)
         {
             _userService = userService;
-            _mapper = mapper;
         }
 
         [HttpGet("me")]
@@ -27,7 +24,7 @@ namespace EzhikLoader.Server.Controllers.User
 
             int userId = int.Parse(userIdClaim);
 
-            var user = await _userService.GetUserByIDAsync(userId);
+            var user = await _userService.GetUserByIdAsync(userId);
             
             return Ok(user);
         }

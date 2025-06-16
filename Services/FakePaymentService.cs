@@ -14,7 +14,7 @@ namespace EzhikLoader.Server.Services
         {
             _dbContext = dbContext;
         }
-
+        //TODO: добавить проверку наличия подписки у пользователя на приложение
         public async Task<PaymentResponse> StartPaymentAsync(PaymentRequest paymentRequest)
         {
             if (!await _dbContext.Users.AnyAsync(u => u.Id == paymentRequest.UserId))

@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Authorization;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
+using EzhikLoader.Server.Models.DTOs.User.Response;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Controllers.Admin
 {
     [ApiController]
-    [Route("api/admin/apps")]
+    [Route("api/apps")]
     [Authorize(Roles = "admin")]
     public class AppsController : ControllerBase
     {
@@ -18,44 +20,47 @@ namespace EzhikLoader.Server.Controllers.Admin
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAppAsync([FromBody] CreateAppDTO createAppDTO)
+        public async Task<IActionResult> CreateApp(CreateAppDTO appDTO)
         {
             try
             {
-                var app = await _appService.CreateAppAsync(createAppDTO);
-                return Ok(app);
+                AppDTO app = await _appService.CreateAppAsync(appDTO);
+                return CreatedAtAction(
+                    nameof(Controllers.User.AppsController.GetAppById),
+                    new { appId = app.Id },
+                    app);
             }
-            catch (ArgumentException ex)
+            catch (BadRequestException ex)
             {
                 return BadRequest(ex.Message);
             }
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateAppAsync(UpdateAppDataDTO updateApp)
+        public async Task<IActionResult> UpdateApp(UpdateAppDTO updateApp)
         {
             try
             {
                 await _appService.UpdateAppAsync(updateApp);
-                return Ok();
+                return NoContent();
             }
-            catch (ArgumentException ex)
+            catch (NotFoundException ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(ex.Message);
             }
         }
 
         [HttpDelete("{appId}")]
-        public async Task<IActionResult> DeleteAppAsync(int appId)
+        public async Task<IActionResult> DeleteApp(int appId)
         {
             try
             {
                 var app = await _appService.DeleteAppAsync(appId);
                 return Ok(app);
             }
-            catch (ArgumentException ex)
+            catch (NotFoundException ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(ex.Message);
             }
         }
     }

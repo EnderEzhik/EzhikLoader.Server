@@ -1,9 +1,8 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using AutoMapper;
 using EzhikLoader.Server.Services;
-using EzhikLoader.Server.Models.DTOs.User.Response;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Controllers.User
 {
@@ -20,7 +19,7 @@ namespace EzhikLoader.Server.Controllers.User
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAppsAsync()
+        public async Task<IActionResult> GetAllApps()
         {
             var apps = await _appService.GetAllAppsAsync();
 
@@ -28,7 +27,7 @@ namespace EzhikLoader.Server.Controllers.User
         }
 
         [HttpGet("available")]
-        public async Task<IActionResult> GetAvailableAppsAsync()
+        public async Task<IActionResult> GetAvailableApps()
         {
             var userIdClaim = HttpContext.User.FindFirst("sub")!.Value;
 
@@ -39,8 +38,22 @@ namespace EzhikLoader.Server.Controllers.User
             return Ok(availableApps);
         }
 
+        [HttpGet("{appId}")]
+        public async Task<IActionResult> GetAppById(int appId)
+        {
+            try
+            {
+                var app = await _appService.GetAppByIdAsync(appId);
+                return Ok(app);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
         [HttpGet("{appId}/file")]
-        public async Task<IActionResult> GetFileAppAsync(int appId)
+        public async Task<IActionResult> GetFileApp(int appId)
         {
             string userIdClaim = HttpContext.User.FindFirstValue("sub");
             var userId = int.Parse(userIdClaim);
@@ -51,7 +64,7 @@ namespace EzhikLoader.Server.Controllers.User
 
                 return File(fileStream, "application/octet-stream", fileName);
             }
-            catch (ArgumentException ex)
+            catch (NotFoundException ex)
             {
                 return BadRequest(ex.Message);
             }

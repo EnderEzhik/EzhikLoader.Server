@@ -23,11 +23,17 @@ namespace EzhikLoader.Server.Logger
             requestLogText.AppendLine($"Host: {context.Request.Host}");
             requestLogText.AppendLine($"Authorization: {context.Request.Headers.Authorization}");
 
-            using (var s = new StreamReader(context.Request.Body))
+            if (context.Request.Body.CanRead)
             {
-                string body = await s.ReadToEndAsync();
-                requestLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
-                context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
+                if (context.Request.ContentType != "multipart/form-data")
+                {
+                    using (var s = new StreamReader(context.Request.Body))
+                    {
+                        string body = await s.ReadToEndAsync();
+                        requestLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
+                        context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
+                    }
+                }
             }
 
             _logger.LogInformation(requestLogText.ToString());
@@ -39,13 +45,16 @@ namespace EzhikLoader.Server.Logger
 
             if (context.Response.Body.CanRead)
             {
-                responseLogText.AppendLine($"ContentDisposition: {context.Response.Headers.ContentDisposition}");
-
-                using (var s = new StreamReader(context.Response.Body))
+                if (context.Request.ContentType != "multipart/form-data")
                 {
-                    string body = await s.ReadToEndAsync();
-                    responseLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
-                    context.Response.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
+                    responseLogText.AppendLine($"ContentDisposition: {context.Response.Headers.ContentDisposition}");
+
+                    using (var s = new StreamReader(context.Response.Body))
+                    {
+                        string body = await s.ReadToEndAsync();
+                        responseLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
+                        context.Response.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
+                    }
                 }
             }
 

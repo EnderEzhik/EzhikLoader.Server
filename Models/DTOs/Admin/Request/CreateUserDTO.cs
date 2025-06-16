@@ -1,4 +1,6 @@
-﻿namespace EzhikLoader.Server.Models.DTOs.Admin.Request
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EzhikLoader.Server.Models.DTOs.Admin.Request
 {
     public class CreateUserDTO
     {
@@ -6,6 +8,8 @@
         public string Password { get; set; }
         public string? Email { get; set; }
         public int RoleId { get; set; }
-        public bool IsActive { get; set; }
+
+        [Required]
+        public bool? IsActive { get; set; }
     }
 }

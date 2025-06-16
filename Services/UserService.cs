@@ -3,6 +3,7 @@ using AutoMapper;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
 using EzhikLoader.Server.Models.DTOs.Admin.Response;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Services
 {
@@ -31,56 +32,49 @@ namespace EzhikLoader.Server.Services
             return _mapper.Map<List<UserDTO>>(users);
         }
 
-        public async Task<Models.DTOs.User.Response.UserDTO> GetUserByIDAsync(int userId)
+        public async Task<Models.DTOs.User.Response.UserDTO> GetUserByIdAsync(int userId)
         {
             var user = await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
             {
-                throw new ArgumentException($"user with ID {userId} not found");
+                throw new NotFoundException($"user with ID {userId} not found");
             }
 
             return _mapper.Map<Models.DTOs.User.Response.UserDTO>(user);
         }
 
-        public async Task UpdateUserAsync(UpdateUserDTO updateUser)
+        public async Task<UserDTO> GetDetailedUserByIdAsync(int userId)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == updateUser.Id);
+            var user = await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
             if (user == null)
             {
-                throw new ArgumentException($"user with ID {updateUser.Id} not found");
+                throw new NotFoundException($"user with ID {userId} not found");
             }
 
-            if (updateUser.Login != null)
+            return _mapper.Map<UserDTO>(user);
+        }
+
+        public async Task UpdateUserAsync(UpdateUserDTO userDTO)
+        {
+            var user = await _dbContext.Users.Include(e => e.Role).FirstOrDefaultAsync(u => u.Id == userDTO.Id);
+            if (user == null)
             {
-                user.Login = updateUser.Login;
+                throw new NotFoundException($"user with ID {userDTO.Id} not found");
             }
-            if (updateUser.Password != null)
-            {
-                user.Password = updateUser.Password;
-            }
-            if (updateUser.Email != null)
-            {
-                user.Email = updateUser.Email;
-            }
-            if (updateUser.RoleId.HasValue)
-            {
-                user.RoleId = updateUser.RoleId.Value;
-            }
-            if (updateUser.IsActive.HasValue)
-            {
-                user.IsActive = updateUser.IsActive.Value;
-            }
+
+            _mapper.Map(userDTO, user);
 
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<UserDTO> DeleteUserByIDAsync(int userId)
+        public async Task<UserDTO> DeleteUserByIdAsync(int userId)
         {
             var user = await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
-                throw new ArgumentException($"user with ID {userId} not found");
+                throw new NotFoundException($"user with ID {userId} not found");
             }
 
             _dbContext.Users.Remove(user);

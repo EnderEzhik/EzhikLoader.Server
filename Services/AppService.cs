@@ -3,6 +3,8 @@ using AutoMapper;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models;
 using EzhikLoader.Server.Models.DTOs.Admin.Request;
+using EzhikLoader.Server.Models.DTOs.User.Response;
+using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Services
 {
@@ -16,33 +18,44 @@ namespace EzhikLoader.Server.Services
         {
             _dbContext = dbContext;
             _mapper = mapper;
-            _appsFilesDirectory = config["AppsFilesDirectory"]!;
+            _appsFilesDirectory = config["AppsFilesDirectory"] ?? throw new ArgumentNullException("file storage directory not found");
         }
 
-        public async Task<List<Models.DTOs.User.Response.AppDTO>> GetAllAppsAsync()
+        public async Task<List<AppDTO>> GetAllAppsAsync()
         {
             var apps = await _dbContext.Apps.Where(a => a.IsActive == true).ToListAsync();
-            return _mapper.Map<List<Models.DTOs.User.Response.AppDTO>>(apps);
+            return _mapper.Map<List<AppDTO>>(apps);
         }
 
-        public async Task<List<Models.DTOs.User.Response.AppDTO>> GetAvailableAppsAsync(int userId)
+        public async Task<List<AppDTO>> GetAvailableAppsAsync(int userId)
         {
             var apps = await _dbContext.Subscriptions.Where(s => s.UserId == userId && s.EndDate > DateTime.UtcNow)
                 .Select(s => s.App).ToListAsync();
-            return _mapper.Map<List<Models.DTOs.User.Response.AppDTO>>(apps);
+            return _mapper.Map<List<AppDTO>>(apps);
+        }
+
+        public async Task<AppDTO> GetAppByIdAsync(int appId)
+        {
+            var app = await _dbContext.Apps.FindAsync(appId);
+            if (app == null)
+            {
+                throw new NotFoundException($"app with ID {appId} not found");
+            }
+
+            return _mapper.Map<AppDTO>(app);
         }
 
         public async Task<(FileStream FileStream, string FileName)> GetFileAppAsync(int appId, int userId)
         {
-            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
+            var app = await _dbContext.Apps.FindAsync(appId);
             if (app == null)
             {
-                throw new ArgumentException($"app with ID {appId} not found");
+                throw new NotFoundException($"app with ID {appId} not found");
             }
 
             if (!await _dbContext.Users.AnyAsync(u => u.Id == userId))
             {
-                throw new ArgumentException($"user with ID {userId} not found");
+                throw new NotFoundException($"user with ID {userId} not found");
             }
 
             var subscription = await _dbContext.Subscriptions
@@ -64,82 +77,55 @@ namespace EzhikLoader.Server.Services
             return (fileStream, app.FileName);
         }
 
-        public async Task<Models.DTOs.User.Response.AppDTO> CreateAppAsync(CreateAppDTO newAppDTO)
+        public async Task<AppDTO> CreateAppAsync(CreateAppDTO appDTO)
         {
-            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Name == newAppDTO.Name);
-            if (app != null)
+            if (await _dbContext.Apps.AnyAsync(a => a.Name == appDTO.Name))
             {
-                throw new ArgumentException($"app with Name \"{newAppDTO.Name}\" already exist");
+                throw new BadRequestException($"app with Name \"{appDTO.Name}\" already exist");
             }
 
-            App newApp = new App()
-            {
-                Name = newAppDTO.Name,
-                Description = newAppDTO.Description,
-                Version = newAppDTO.Version,
-                Price = newAppDTO.Price!.Value,
-                IsActive = newAppDTO.IsActive!.Value,
-                FileName = newAppDTO.FileName,
-                IconName = newAppDTO.IconName
-            };
+            App newApp = new App();
+
+            _mapper.Map(appDTO, newApp);
 
             _dbContext.Apps.Add(newApp);
             await _dbContext.SaveChangesAsync();
 
-            return _mapper.Map<Models.DTOs.User.Response.AppDTO>(newApp);
+            string filePath = Path.Combine(_appsFilesDirectory, newApp.Id.ToString(), newApp.FileName);
+            Directory.CreateDirectory(Path.Combine(_appsFilesDirectory, newApp.Id.ToString()));
+            using (FileStream fs = new FileStream(filePath, FileMode.CreateNew))
+            {
+                await appDTO.File.CopyToAsync(fs);
+            }
+
+            return _mapper.Map<AppDTO>(newApp);
         }
 
-        public async Task<Models.DTOs.User.Response.AppDTO> DeleteAppAsync(int appId)
+        public async Task<AppDTO> DeleteAppAsync(int appId)
         {
             var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
 
             if (app == null)
             {
-                throw new ArgumentException($"app with ID {appId} not found");
+                throw new NotFoundException($"app with ID {appId} not found");
             }
 
             _dbContext.Apps.Remove(app);
             await _dbContext.SaveChangesAsync();
 
-            return _mapper.Map<Models.DTOs.User.Response.AppDTO>(app);
+            return _mapper.Map<AppDTO>(app);
         }
 
-        public async Task UpdateAppAsync(UpdateAppDataDTO updateApp)
+        //TODO: добавить проверку пробелов в строках
+        public async Task UpdateAppAsync(UpdateAppDTO appDTO)
         {
-            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == updateApp.Id);
+            var app = await _dbContext.Apps.FindAsync(appDTO.Id);
             if (app == null)
             {
-                throw new ArgumentException($"app with ID {updateApp.Id} not found");
+                throw new NotFoundException($"app with ID {appDTO.Id} not found");
             }
 
-            if (updateApp.Name != null)
-            {
-                app.Name = updateApp.Name;
-            }
-            if (updateApp.Description != null)
-            {
-                app.Description = updateApp.Description;
-            }
-            if (updateApp.Version != null)
-            {
-                app.Version = updateApp.Version;
-            }
-            if (updateApp.Price.HasValue)
-            {
-                app.Price = updateApp.Price.Value;
-            }
-            if (updateApp.IsActive.HasValue)
-            {
-                app.IsActive = updateApp.IsActive.Value;
-            }
-            if (updateApp.FileName != null)
-            {
-                app.FileName = updateApp.FileName;
-            }
-            if (updateApp.IconName != null)
-            {
-                app.IconName = updateApp.IconName;
-            }
+            _mapper.Map(appDTO, app);
 
             await _dbContext.SaveChangesAsync();
         }

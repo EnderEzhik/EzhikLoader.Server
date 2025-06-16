@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace EzhikLoader.Server.Controllers.Admin
 {
     [ApiController]
-    [Route("api/admin/subscriptions")]
+    [Route("api/subscriptions")]
     [Authorize(Roles = "admin")]
     public class SubscriptionsController : ControllerBase
     {
@@ -31,7 +31,7 @@ namespace EzhikLoader.Server.Controllers.Admin
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("{subscriptionId}")]
         public async Task<IActionResult> RevokeSubscription(int subscriptionId)
         {
             try

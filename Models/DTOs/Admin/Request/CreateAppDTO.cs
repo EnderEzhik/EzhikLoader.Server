@@ -13,7 +13,7 @@ namespace EzhikLoader.Server.Models.DTOs.Admin.Request
 
         [Required]
         public bool? IsActive { get; set; }
-        public string FileName { get; set; }
-        public string? IconName { get; set; }
+        public IFormFile File { get; set; }
+        public IFormFile? Icon { get; set; }
     }
 }
