@@ -23,18 +23,18 @@ namespace EzhikLoader.Server.Logger
             requestLogText.AppendLine($"Host: {context.Request.Host}");
             requestLogText.AppendLine($"Authorization: {context.Request.Headers.Authorization}");
 
-            if (context.Request.Body.CanRead)
-            {
-                if (context.Request.ContentType != "multipart/form-data")
-                {
-                    using (var s = new StreamReader(context.Request.Body))
-                    {
-                        string body = await s.ReadToEndAsync();
-                        requestLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
-                        context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
-                    }
-                }
-            }
+            //if (context.Request.Body.CanRead)
+            //{
+            //    if (context.Request.ContentType != "multipart/form-data")
+            //    {
+            //        using (var s = new StreamReader(context.Request.Body))
+            //        {
+            //            string body = await s.ReadToEndAsync();
+            //            requestLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
+            //            context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
+            //        }
+            //    }
+            //}
 
             _logger.LogInformation(requestLogText.ToString());
 
@@ -43,20 +43,20 @@ namespace EzhikLoader.Server.Logger
             var responseLogText = new StringBuilder();
             responseLogText.AppendLine($"StatusCode: {context.Response.StatusCode}");
 
-            if (context.Response.Body.CanRead)
-            {
-                if (context.Request.ContentType != "multipart/form-data")
-                {
-                    responseLogText.AppendLine($"ContentDisposition: {context.Response.Headers.ContentDisposition}");
+            //if (context.Response.Body.CanRead)
+            //{
+            //    if (context.Request.ContentType != "multipart/form-data")
+            //    {
+            //        responseLogText.AppendLine($"ContentDisposition: {context.Response.Headers.ContentDisposition}");
 
-                    using (var s = new StreamReader(context.Response.Body))
-                    {
-                        string body = await s.ReadToEndAsync();
-                        responseLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
-                        context.Response.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
-                    }
-                }
-            }
+            //        using (var s = new StreamReader(context.Response.Body))
+            //        {
+            //            string body = await s.ReadToEndAsync();
+            //            responseLogText.AppendLine($"Body: {body.ReplaceLineEndings().Replace(" ", "")}");
+            //            context.Response.Body = new MemoryStream(Encoding.UTF8.GetBytes(body), true);
+            //        }
+            //    }
+            //}
 
             _logger.LogInformation(responseLogText.ToString());
         }

@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Models.DTOs.User.Request;
-using System.Security.Claims;
 using EzhikLoader.Server.Exceptions;
 
 namespace EzhikLoader.Server.Controllers

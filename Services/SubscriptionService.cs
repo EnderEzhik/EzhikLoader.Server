@@ -101,5 +101,17 @@ namespace EzhikLoader.Server.Services
             subscription.EndDate = extendSubscription.NewEndDate;
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<List<Models.DTOs.Admin.Response.SubscriptionDTO>> GetAllSubscriptions()
+        {
+            var subscriptions = await _dbContext.Subscriptions.Where(s => s.EndDate >=  DateTime.UtcNow).ToListAsync();
+            return _mapper.Map<List<Models.DTOs.Admin.Response.SubscriptionDTO>>(subscriptions);
+        }
+
+        public async Task<List<Models.DTOs.Admin.Response.SubscriptionDTO>> GetUserSubscriptionsAsync(int userId)
+        {
+            var subscriptions = await _dbContext.Subscriptions.Where(s => s.UserId == userId && s.EndDate >= DateTime.UtcNow).ToListAsync();
+            return _mapper.Map<List<Models.DTOs.Admin.Response.SubscriptionDTO>>(subscriptions);
+        }
     }
 }

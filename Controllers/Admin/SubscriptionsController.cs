@@ -59,5 +59,18 @@ namespace EzhikLoader.Server.Controllers.Admin
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllSubscriptions()
+        {
+            var subs = await _subscriptionService.GetAllSubscriptions();
+            return Ok(subs);
+        }
+
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUserSubscriptions(int userId)
+        {
+            var subs = await _subscriptionService.GetUserSubscriptionsAsync(userId);
+            return Ok(subs);
+        }
     }
 }
