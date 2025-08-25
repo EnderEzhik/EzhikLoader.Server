@@ -33,7 +33,7 @@ namespace EzhikLoader.Server
                     ValidateAudience = false,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found."))),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new ArgumentNullException("jwt key can not be null"))),
                     NameClaimType = "sub",
                     RoleClaimType = "role"
                 };

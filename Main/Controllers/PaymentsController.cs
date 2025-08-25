@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using EzhikLoader.Server.Interfaces;
 using EzhikLoader.Server.Models.DTOs.User.Request;
 
-namespace EzhikLoader.Server.Controllers.User
+namespace EzhikLoader.Server.Controllers
 {
     [ApiController]
     [Route("api/payments")]

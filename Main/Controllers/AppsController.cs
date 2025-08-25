@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using EzhikLoader.Server.Services;
 using EzhikLoader.Server.Exceptions;
 
-namespace EzhikLoader.Server.Controllers.User
+namespace EzhikLoader.Server.Controllers
 {
     [ApiController]
     [Route("api/apps")]
@@ -55,7 +55,11 @@ namespace EzhikLoader.Server.Controllers.User
         [HttpGet("{appId}/file")]
         public async Task<IActionResult> GetFileApp(int appId)
         {
-            string userIdClaim = HttpContext.User.FindFirstValue("sub");
+            string? userIdClaim = HttpContext.User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized();
+            }
             var userId = int.Parse(userIdClaim);
 
             try

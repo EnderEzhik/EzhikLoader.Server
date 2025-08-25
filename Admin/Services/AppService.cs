@@ -100,14 +100,14 @@ namespace EzhikLoader.Admin.Services
             }
 
             // Проверяем уникальность имени файла, если оно передается
-            if (appUpdate.FileName != null && appUpdate.FileName != app.FileName)
-            {
-                bool fileNameExists = await db.Apps.AnyAsync(a => a.FileName == appUpdate.FileName && a.Id != id);
-                if (fileNameExists)
-                {
-                    throw new InvalidOperationException($"Приложение с именем файла \"{appUpdate.FileName}\" уже существует");
-                }
-            }
+            // if (appUpdate.FileName != null && appUpdate.FileName != app.FileName)
+            // {
+            //     bool fileNameExists = await db.Apps.AnyAsync(a => a.FileName == appUpdate.FileName && a.Id != id);
+            //     if (fileNameExists)
+            //     {
+            //         throw new InvalidOperationException($"Приложение с именем файла \"{appUpdate.FileName}\" уже существует");
+            //     }
+            // }
 
             // Обновляем только те поля, которые действительно переданы
             if (appUpdate.Name != null)

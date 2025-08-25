@@ -22,7 +22,8 @@ namespace EzhikLoader.Server.Services
 
         public string GenerateToken(User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            string jwtKey = _configuration["Jwt:Key"] ?? throw new ArgumentNullException("jwt key can not be null");
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>()

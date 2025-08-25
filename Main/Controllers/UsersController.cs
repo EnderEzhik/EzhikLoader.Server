@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EzhikLoader.Server.Services;
 
-namespace EzhikLoader.Server.Controllers.User
+namespace EzhikLoader.Server.Controllers
 {
     [ApiController]
     [Route("api/users")]

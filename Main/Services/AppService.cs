@@ -2,7 +2,6 @@
 using AutoMapper;
 using EzhikLoader.Server.Data;
 using EzhikLoader.Server.Models;
-using EzhikLoader.Server.Models.DTOs.Admin.Request;
 using EzhikLoader.Server.Models.DTOs.User.Response;
 using EzhikLoader.Server.Exceptions;
 
@@ -75,59 +74,6 @@ namespace EzhikLoader.Server.Services
             await _dbContext.SaveChangesAsync();
 
             return (fileStream, app.FileName);
-        }
-
-        public async Task<AppDTO> CreateAppAsync(CreateAppDTO appDTO)
-        {
-            if (await _dbContext.Apps.AnyAsync(a => a.Name == appDTO.Name))
-            {
-                throw new BadRequestException($"app with Name \"{appDTO.Name}\" already exist");
-            }
-
-            App newApp = new App();
-
-            _mapper.Map(appDTO, newApp);
-
-            _dbContext.Apps.Add(newApp);
-            await _dbContext.SaveChangesAsync();
-
-            string filePath = Path.Combine(_appsFilesDirectory, newApp.Id.ToString(), newApp.FileName);
-            Directory.CreateDirectory(Path.Combine(_appsFilesDirectory, newApp.Id.ToString()));
-            using (FileStream fs = new FileStream(filePath, FileMode.CreateNew))
-            {
-                await appDTO.File.CopyToAsync(fs);
-            }
-
-            return _mapper.Map<AppDTO>(newApp);
-        }
-
-        public async Task<AppDTO> DeleteAppAsync(int appId)
-        {
-            var app = await _dbContext.Apps.FirstOrDefaultAsync(a => a.Id == appId);
-
-            if (app == null)
-            {
-                throw new NotFoundException($"app with ID {appId} not found");
-            }
-
-            _dbContext.Apps.Remove(app);
-            await _dbContext.SaveChangesAsync();
-
-            return _mapper.Map<AppDTO>(app);
-        }
-
-        //TODO: добавить проверку пробелов в строках
-        public async Task UpdateAppAsync(UpdateAppDTO appDTO)
-        {
-            var app = await _dbContext.Apps.FindAsync(appDTO.Id);
-            if (app == null)
-            {
-                throw new NotFoundException($"app with ID {appDTO.Id} not found");
-            }
-
-            _mapper.Map(appDTO, app);
-
-            await _dbContext.SaveChangesAsync();
         }
     }
 }
